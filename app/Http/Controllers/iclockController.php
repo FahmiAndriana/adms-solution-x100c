@@ -5,6 +5,7 @@ use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http; // Pastikan ini di-import di atas
 
 
 class iclockController extends Controller
@@ -66,6 +67,7 @@ public function handshake(Request $request)
             $arr = preg_split('/\\r\\n|\\r|,|\\n/', $request->getContent());
             //$tot = count($arr);
             $tot = 0;
+            $attendanceData = [];
             //operation log
             if($request->input('table') == "OPERLOG"){
                 // $tot = count($arr) - 1;
@@ -99,9 +101,19 @@ public function handshake(Request $request)
                     $q['updated_at'] = now();
                     //dd($q);
                     DB::table('attendances')->insert($q);
+                    $attendanceData[] = $q;
                     $tot++;
                 // dd(DB::getQueryLog());
             }
+
+            // 3. Kirim data ke API Al-Arabi (Dilakukan di luar loop agar lebih cepat)
+             if (!empty($attendanceData)) {
+                    Http::timeout(5)->post('https://api.alarabi.sch.id/api/v1/iclock/attendance', [
+                    'data' => $attendanceData,
+                    'source' => 'local_bridge'
+                    ]);
+                }
+
             return "OK: ".$tot;
         } catch (Throwable $e) {
             $data['error'] = $e;
