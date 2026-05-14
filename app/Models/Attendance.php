@@ -21,10 +21,10 @@ class Attendance extends Model
 
     protected $casts = [
         'timestamp' => 'datetime',
-        'status1' => 'boolean',
-        'status2' => 'boolean',
-        'status3' => 'boolean',
-        'status4' => 'boolean',
-        'status5' => 'boolean',
+        'status1' => 'integer',
+        'status2' => 'integer',
+        'status3' => 'integer',
+        'status4' => 'integer',
+        'status5' => 'integer',
     ];
 }

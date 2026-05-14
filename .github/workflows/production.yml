@@ -1,0 +1,40 @@
+name: Deploy Attendance Al-Arabi
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}        # Isi dengan IP Server Anda
+          username: ${{ secrets.SSH_USERNAME }} # Isi dengan 'developer'
+          key: ${{ secrets.SSH_PRIVATE_KEY }}   # Isi dengan Private Key yang tadi
+          port: 22
+          script: |
+            cd /var/www/attendance.alarabi.sch.id/adms-solution-x100c
+            
+            # Ambil kode terbaru
+            git pull origin main
+            
+            # Instal dependencies
+            composer install --no-dev --optimize-autoloader
+            
+            # Migrasi Database
+            php artisan migrate --force
+            
+            # Clear Cache
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            # Optimasi Permission (Opsional jika sering bermasalah)
+            sudo chown -R www-data:www-data storage bootstrap/cache
